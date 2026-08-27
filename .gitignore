@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local Runtime SQLite databases and generated plots
+tools/data/celery_broker.db
+tools/data/celery_results.db
+tools/data/chat_history.db
+static/plots/*.png
