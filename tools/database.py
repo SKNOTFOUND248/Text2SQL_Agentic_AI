@@ -1,9 +1,11 @@
+import os
 import sqlite3
 
+DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "my_database.db"))
 
 def SQLtool(query:str)-> str:
     """This function takes a SQL query as input and returns the result of the query as a string."""
-    conn = sqlite3.connect("data\\my_database.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(query)
     result = cursor.fetchall()

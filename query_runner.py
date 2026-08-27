@@ -30,7 +30,7 @@ def execute_query(schema: str, request: str):
     This function takes a database schema and a user request as input,
     and returns the SQL query, the results of the query execution, and a message explaining any errors or issues with the query execution.
     """
-    result = executor_agent.run(
+    result = executor_agent(
         data_schema=schema,
         request=request,
     )
