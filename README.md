@@ -28,7 +28,7 @@ The core execution path is modeled as a LangGraph StateGraph. The workflow maint
 
 2. Executor Node:
    - Agent: Database Executor (QueryExecutor using DSPy ReAct)
-   - Responsibility: Runs if the safety flag is 1. Evaluates the modified request, selects SQLtool, executes queries on the SQLite database, and returns the result tuple list. If an execution error occurs, it catches the exception and attempts self-correction.
+   - Responsibility: Runs if the safety flag is 1. Evaluates the modified request, selects SQLtool, executes queries on the SQLite database, and returns the result tuple list. If an execution error occurs, it catches the exception and attempts self-correcting cycles.
 
 3. Visual Analysis Node:
    - Agent: Visualizer (VisualAnalysis using DSPy ChainOfThought)
@@ -46,6 +46,22 @@ The core execution path is modeled as a LangGraph StateGraph. The workflow maint
 A conditional edge is placed after the Rewriter Node.
 - If the safety flag is 1, execution routes to the Executor Node.
 - If the safety flag is 0, execution bypasses the Executor and Visualizer nodes, routing directly to the Report Node to summarize the warning or data limitation.
+
+---
+
+## Query Safety Agent Deep-Dive
+
+The Query Safety Agent (Query_safty_agent) acts as the system gateway, providing critical security analysis and query optimization before any database interaction takes place. 
+
+### Security and Validation Logic
+- Schema Alignment: The agent is provided with the dynamic schema of the database. It validates that the tables and columns requested by the user actually exist, preventing invalid executions.
+- Safety Flags: 
+  - A safety_flag of 1 indicates the query is clean, secure, and contains sufficient information to execute.
+  - A safety_flag of 0 is triggered when the request is malicious (attempting SQL injection, unauthorized drops/updates), or does not contain enough information to generate a valid SQL query (e.g., general conversation or ambiguous statements).
+- Query Optimization: Instead of passing raw user queries to the SQL generator, the safety agent rewrites the prompt to optimize it for generating exact, high-performance SQL.
+
+### Unsafe Query Execution Path
+When a query is flagged as unsafe (safety_flag = 0), the LangGraph conditional routing directs the state machine to bypass the database runner entirely. The Report Creation node uses the message returned by the safety agent to draft an explanation of why the query was blocked or what additional info is required. The Final Answer node then outputs this report to the dashboard, ensuring that raw SQL database errors are never exposed.
 
 ---
 
@@ -107,6 +123,21 @@ Reference:
 - Historical Chat Sessions:
   ![Session Chat History](test_img/Screenshot%202026-08-27%20111608.png)
   This screenshot demonstrates the sidebar session manager and the loaded chat history log retrieved from the SQLite database.
+
+### Query Safety Enforcement Screenshots
+These screenshots illustrate how the Query Safety agent operates and coordinates its outputs:
+
+- Safety Agent Output Verification:
+  ![Safety Agent Output Analysis](test_img/Screenshot%202026-08-27%20113501.png)
+  This screenshot displays the safety checks run on user queries, tracking the safety flag status and message outputs returned by the planning layer.
+
+- Unsafe Query Block Handling:
+  ![Unsafe Query Block Trace](test_img/Screenshot%202026-08-27%20113512.png)
+  This screenshot demonstrates the system blocking execution and detailing user query security parameters when a query is flagged with a safety_flag of 0.
+
+- Complete Safety Enforcement Trace:
+  ![Enforcement State Machine Trace](test_img/Screenshot%202026-08-27%20113522.png)
+  This screenshot illustrates the complete, structured Streamlit view displaying step-by-step security checks and output logs.
 
 ---
 
