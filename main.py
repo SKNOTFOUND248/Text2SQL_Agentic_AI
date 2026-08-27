@@ -44,7 +44,7 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     session_id: str
     user_request: str
-    schema: Optional[str]
+    database_schema: Optional[str]
     modified_request: Optional[str]
     rewriter_message: Optional[str]
     safety_flag: int
@@ -92,7 +92,7 @@ async def handle_query(payload: QueryRequest):
         return QueryResponse(
             session_id=payload.session_id,
             user_request=output_state.get("user_request"),
-            schema=output_state.get("schema"),
+            database_schema=output_state.get("schema"),
             modified_request=output_state.get("modified_request"),
             rewriter_message=output_state.get("rewriter_message"),
             safety_flag=output_state.get("safety_flag", 0),
